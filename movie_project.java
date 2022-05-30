@@ -18,6 +18,8 @@ import javax.swing.JTextField;
 
 public class movie_project extends JFrame{
 	   Connection con;
+	   String current_time = "2021-05-30";
+		int member_id;
 	   
 	   public movie_project() {
 			setTitle("18011828/유기훈");
@@ -50,6 +52,7 @@ public class movie_project extends JFrame{
 				}
 			});
 			
+			/*----------------------------관리자기능-------------------------*/
 			btn_manager_1.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					btn_mainPage.setVisible(false);
@@ -179,6 +182,144 @@ public class movie_project extends JFrame{
 					c.add(text_label);
 				}
 			});
+			/*----------------------------관리자기능-------------------------*/
+			
+			
+			/*----------------------------회원기능-------------------------*/
+			JButton movie_table = new JButton("영화 조회");
+			JButton reservation_check = new JButton("예매 확인");
+			JButton exit = new JButton("나가기");
+			JLabel lb_member_id = new JLabel();
+			c.add(movie_table);
+			c.add(reservation_check);
+			c.add(exit);
+			c.add(lb_member_id);
+			movie_table.setVisible(false);
+			reservation_check.setVisible(false);
+			exit.setVisible(false);
+			lb_member_id.setVisible(false);
+			
+			btn_member.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					btn_manager.setVisible(false);
+					btn_member.setVisible(false);
+					btn_mainPage.setVisible(false);
+					JLabel info = new JLabel("회원아이디를 입력하세요!");
+					JTextField tx_member_id = new JTextField(5);
+					JButton btn_member_id = new JButton("submit");
+					c.add(info);
+					c.add(tx_member_id);
+					c.add(btn_member_id);
+					
+					btn_member_id.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							member_id = Integer.parseInt(tx_member_id.getText());
+							lb_member_id.setText("회원 아이디 : " + Integer.toString(member_id));
+							lb_member_id.setVisible(true);
+							info.setVisible(false);
+							tx_member_id.setVisible(false);
+							btn_member_id.setVisible(false);
+							c.remove(info);
+							c.remove(tx_member_id);
+							c.remove(btn_member_id);
+							
+							movie_table.setVisible(true);
+							reservation_check.setVisible(true);
+							exit.setVisible(true);
+						}
+					});
+				}
+			});
+			
+			movie_table.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					movie_table.setVisible(false);
+					reservation_check.setVisible(false);
+					exit.setVisible(false);
+					
+					JLabel lb_movie = new JLabel("순서대로 : 영화명, 감독명, 배우명, 장르를 입력하세요.");
+					JTextField tf_movie_name = new JTextField(50);
+					JTextField tf_movie_director = new JTextField(20);
+					JTextField tf_movie_actor = new JTextField(20);
+					JTextField tf_movie_genre = new JTextField(50);
+					JButton submit = new JButton("submit");
+					JLabel lb_movie_selected = new JLabel();
+					c.add(lb_movie);
+					c.add(tf_movie_name);
+					c.add(tf_movie_director);
+					c.add(tf_movie_actor);
+					c.add(tf_movie_genre);
+					c.add(submit);
+					c.add(lb_movie_selected);
+					lb_movie_selected.setVisible(false);
+					
+					submit.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							String movie_name = tf_movie_name.getText();
+							String movie_director = tf_movie_director.getText();
+							String movie_actor = tf_movie_actor.getText();
+							String movie_genre = tf_movie_genre.getText();
+							
+							String query = "select * from movie";
+							if(movie_name.length() != 0 || movie_director.length() != 0 || movie_actor.length() != 0 || movie_genre.length() != 0) {
+								query += " where ";
+							}
+							if(movie_name.length() != 0) {
+								query += "movie_name = \"" + movie_name + "\"";
+								if(movie_director.length() != 0 || movie_actor.length() != 0 || movie_genre.length() != 0) {
+									query += " and ";
+								}
+							}
+							if(movie_director.length() != 0) {
+								query += "movie_director_name = \"" + movie_director + "\"";
+								if(movie_actor.length() != 0 || movie_genre.length() != 0) {
+									query += " and ";
+								}
+							}
+							if(movie_actor.length() != 0) {
+								query += "movie_actor_name = \"" + movie_actor + "\"";
+								if(movie_genre.length() != 0) {
+									query += " and ";
+								}
+							}
+							if(movie_genre.length() != 0) {
+								query += "movie_genre = \"" + movie_genre + "\"";
+							}
+							
+							lb_movie_selected.setText(member_movie_check(query));
+							lb_movie_selected.setVisible(true);
+							
+							lb_movie.setVisible(false);
+							tf_movie_name.setVisible(false);
+							tf_movie_director.setVisible(false);
+							tf_movie_actor.setVisible(false);
+							tf_movie_genre.setVisible(false);
+							submit.setVisible(false);
+							c.remove(lb_movie);
+							c.remove(tf_movie_name);
+							c.remove(tf_movie_director);
+							c.remove(tf_movie_actor);
+							c.remove(tf_movie_genre);
+							c.remove(submit);
+						}
+					});
+				}
+			});
+			
+			reservation_check.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JLabel reservation_table_info = new JLabel("- 예매번호 - 결제방법 - 결제상태 - 결제금액 - 회원아이디 - 결제일자 -");
+					JLabel reserved_movie = new JLabel(reserved_movie_check());
+					
+					reservation_table_info.setVisible(false);
+					reserved_movie.setVisible(false);
+					c.add(reserved_movie);
+					c.add(reservation_table_info);
+					reservation_table_info.setVisible(true);
+					reserved_movie.setVisible(true);
+				}
+			});
+
 			
 			c.add(btn_mainPage);
 			c.add(btn_manager_1);
@@ -299,6 +440,52 @@ public class movie_project extends JFrame{
 					  }
 			   }
 			   
+				relation += "</body></html>";
+				return relation;
+		   } catch(SQLException e) {
+			   e.printStackTrace();
+		   }
+		   return null;
+	   }
+	   
+	   private String member_movie_check(String query) {
+		   try {
+			   Statement stmt = con.createStatement();
+			   ResultSet rs = stmt.executeQuery(query);
+			   String relation = "<html><body style='text-align:center;'>";
+				while(rs.next()) {
+					relation += rs.getInt(1);
+					relation += " / "+rs.getString(2);
+					relation += " / "+rs.getTime(3);
+					relation += " / "+rs.getString(4);
+					relation += " / "+rs.getString(5);
+					relation += " / "+rs.getString(6);
+					relation += " / "+rs.getString(7);
+					relation += " / "+rs.getString(8);
+					relation += " / "+rs.getDate(9)+"<br>";
+				  }
+				relation += "</body></html>";
+				return relation;
+		   } catch(SQLException e) {
+			   e.printStackTrace();
+		   }
+		   return null;
+	   }
+	   
+	   private String reserved_movie_check() {
+		   String query = "select * from reservation where member_id = " + Integer.toString(member_id);
+		   try {
+			   Statement stmt = con.createStatement();
+			   ResultSet rs = stmt.executeQuery(query);
+			   String relation = "<html><body style='text-align:center;'>";
+				while(rs.next()) {
+					relation += rs.getInt(1);
+					relation += " / "+rs.getString(2);
+					relation += " / "+rs.getInt(3);
+					relation += " / "+rs.getInt(4);
+					relation += " / "+rs.getInt(5);
+					relation += " / "+rs.getDate(6)+"<br>";
+				  }
 				relation += "</body></html>";
 				return relation;
 		   } catch(SQLException e) {
