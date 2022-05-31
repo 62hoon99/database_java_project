@@ -18,7 +18,7 @@ import javax.swing.JTextField;
 
 public class movie_project extends JFrame{
 	   Connection con;
-	   String current_time = "2021-05-30";
+	   String current_time = "2021-01-01";
 		int member_id;
 	   
 	   public movie_project() {
@@ -243,6 +243,7 @@ public class movie_project extends JFrame{
 					JTextField tf_movie_actor = new JTextField(20);
 					JTextField tf_movie_genre = new JTextField(50);
 					JButton submit = new JButton("submit");
+					JButton cancle = new JButton("cancle");
 					JLabel lb_movie_selected = new JLabel();
 					c.add(lb_movie);
 					c.add(tf_movie_name);
@@ -250,8 +251,16 @@ public class movie_project extends JFrame{
 					c.add(tf_movie_actor);
 					c.add(tf_movie_genre);
 					c.add(submit);
+					c.add(cancle);
 					c.add(lb_movie_selected);
 					lb_movie_selected.setVisible(false);
+					
+					JTextField tf_reservation_movie_id = new JTextField(5); //예약할 영화 번호 입력하는 text field
+					JButton btn_reservation_movie_id = new JButton("text field에 예매하고 싶은 movie_id를 입력한 후 버튼을 누르세요.");
+					c.add(tf_reservation_movie_id);
+					c.add(btn_reservation_movie_id);
+					tf_reservation_movie_id.setVisible(false);
+					btn_reservation_movie_id.setVisible(false);
 					
 					submit.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
@@ -295,12 +304,36 @@ public class movie_project extends JFrame{
 							tf_movie_actor.setVisible(false);
 							tf_movie_genre.setVisible(false);
 							submit.setVisible(false);
+							cancle.setVisible(false);
 							c.remove(lb_movie);
 							c.remove(tf_movie_name);
 							c.remove(tf_movie_director);
 							c.remove(tf_movie_actor);
 							c.remove(tf_movie_genre);
 							c.remove(submit);
+							
+							tf_reservation_movie_id.setVisible(true);
+							btn_reservation_movie_id.setVisible(true);
+						}
+					});
+					
+					cancle.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							tf_movie_name.setText("");
+							tf_movie_director.setText("");
+							tf_movie_actor.setText("");
+							tf_movie_genre.setText("");
+						}
+					});
+					
+					btn_reservation_movie_id.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							JLabel reservation_result = new JLabel(reservation_movie(tf_reservation_movie_id.getText()));
+							lb_movie_selected.setText("");
+							lb_movie_selected.setVisible(false);
+							btn_reservation_movie_id.setVisible(false);
+							c.add(reservation_result);
+							reservation_result.setVisible(true);
 						}
 					});
 				}
@@ -310,11 +343,42 @@ public class movie_project extends JFrame{
 				public void actionPerformed(ActionEvent e) {
 					JLabel reservation_table_info = new JLabel("- 예매번호 - 결제방법 - 결제상태 - 결제금액 - 회원아이디 - 결제일자 -");
 					JLabel reserved_movie = new JLabel(reserved_movie_check());
+					JButton btn_remove = new JButton("예매삭제하기");
+					JButton btn_change_movie = new JButton("다른영화로 바꾸기");
+					JButton btn_change_schedule = new JButton("상영일정 변경하기");
 					
+					btn_remove.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							btn_remove.setVisible(false);
+							btn_change_movie.setVisible(false);
+							btn_change_schedule.setVisible(false);
+							
+							JTextField tf_remove = new JTextField(5);
+							JButton btn_remove = new JButton("삭제할 reservation_id를 적고 버튼을 누르세요.");
+							
+							btn_remove.addActionListener(new ActionListener() {
+								public void actionPerformed(ActionEvent e) {
+									String reservation_id = tf_remove.getText();
+									JLabel lb_delete = new JLabel(reservation_delete(reservation_id));
+									c.add(lb_delete);
+									lb_delete.setVisible(false);
+									lb_delete.setVisible(true);
+								}
+							});
+							
+							c.add(tf_remove);
+							c.add(btn_remove);
+						}
+					});
+					
+					reservation_check.setVisible(false);
 					reservation_table_info.setVisible(false);
 					reserved_movie.setVisible(false);
 					c.add(reserved_movie);
 					c.add(reservation_table_info);
+					c.add(btn_remove);
+					c.add(btn_change_movie);
+					c.add(btn_change_schedule);
 					reservation_table_info.setVisible(true);
 					reserved_movie.setVisible(true);
 				}
@@ -492,6 +556,120 @@ public class movie_project extends JFrame{
 			   e.printStackTrace();
 		   }
 		   return null;
+	   }
+	   
+	   private String reservation_movie(String movie_id) {
+		  	  try {
+		  		 String query_ticket_check = "select count(*) as count from (select * from ticket where schedule_id in (select schedule_id from schedule where movie_id = " + movie_id + ")) t_1 where t_1.reservation_id is null;";
+		  	  	 Statement stmt = con.createStatement();
+		  	  	 ResultSet rs_ticket_check = stmt.executeQuery(query_ticket_check);
+		  	  	 int remain_ticket = 0;
+		  	  	 while(rs_ticket_check.next()) {
+		  	  		 remain_ticket = rs_ticket_check.getInt(1);
+		  	  	 }
+		  		 
+		  	  	 if(remain_ticket == 0) {
+		  	  		 return "매진입니다.";
+		  	  	 }
+		  	  	 
+		  		 
+			  	 String query_insert= "INSERT INTO reservation VALUES(?, ?, ?, ?, ?, ?);";
+		  	  	 PreparedStatement pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_insert);
+		  	  	 pstmt.setString(1, null);
+		  	  	 pstmt.setString(2, "card");
+		  	  	 pstmt.setInt(3, 0);
+		  	  	 pstmt.setInt(4, 18000);
+		  	  	 pstmt.setInt(5, member_id);
+		  	  	 pstmt.setDate(6, java.sql.Date.valueOf(current_time));
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  	 
+		  	  	 String query_reservation_key = "SELECT MAX(reservation_id) as reservation_id FROM reservation;";
+		  	  	 ResultSet rs_reservation_key = stmt.executeQuery(query_reservation_key);
+		  	  	 int reservation_key = 0;
+		  	  	 while(rs_reservation_key.next()) {
+						reservation_key = rs_reservation_key.getInt(1);
+		  	  	 }
+		  	  	 
+		  	  	 String query_ticket_id = "select ticket_id from (select * from ticket where schedule_id in (select schedule_id from schedule where movie_id = " + movie_id + ")) t_1 where t_1.reservation_id is null limit 1;";
+		  	  	 ResultSet rs_ticket_id = stmt.executeQuery(query_ticket_id);
+		  	  	 int ticket_id = 0;
+		  	  	 while(rs_ticket_id.next()) {
+		  	  		 ticket_id = rs_ticket_id.getInt(1);
+		  	  	 }
+		  	  	 
+		  	  	 
+			  	 String query_update_ticket= "update ticket set reservation_id = ? where ticket_id = ?;";
+		  	  	 pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_update_ticket);
+		  	  	 pstmt.setInt(1, reservation_key);
+		  	  	 pstmt.setInt(2, ticket_id);
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  	 
+			  	 String query_update_seat= "update seat set seat_availability = 1 where seat_id = (select seat_id from ticket where ticket_id = ?);";
+		  	  	 pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_update_seat);
+		  	  	 pstmt.setInt(1, ticket_id);
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  	 
+		  	  	 return "성공";
+		  	  } catch(SQLException e) {
+				   e.printStackTrace();
+		  	   }
+		  	  return null;
+	   }
+	   
+	   private String reservation_delete(String reservation_id) {
+		   try {
+			  int ticket_id = 0; 
+		  	  Statement stmt = con.createStatement();
+		  	  PreparedStatement pstmt = null;
+		  	  
+		  	  String query_ticket_id = "select ticket_id from ticket where reservation_id = " + reservation_id + ";";
+		  	  ResultSet rs_ticket_check = stmt.executeQuery(query_ticket_id);
+		  	  while(rs_ticket_check.next()) {
+		  	  	ticket_id = rs_ticket_check.getInt(1);
+		  	  }
+		  	  
+			  	 String query_update_seat= "update seat set seat_availability = 0 where seat_id = (select seat_id from ticket where ticket_id = ?);";
+		  	  	 pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_update_seat);
+		  	  	 pstmt.setInt(1, ticket_id);
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  
+		  	  	 
+			  	 String query_update_ticket= "update ticket set reservation_id = ? where ticket_id = ?;";
+		  	  	 pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_update_ticket);
+		  	  	 pstmt.setString(1, null);
+		  	  	 pstmt.setInt(2, ticket_id);
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  	 
+		  	  	 
+		  	  	 stmt.execute("set FOREIGN_KEY_CHECKS = 0;");
+			  	 String query_delete_reservation= "delete from reservation where reservation_id = ?;";
+		  	  	 pstmt = null;
+		  	  	 
+		  	  	 pstmt = con.prepareStatement(query_delete_reservation);
+		  	  	 pstmt.setInt(1, Integer.parseInt(reservation_id));
+		  	  	 
+		  	  	 pstmt.executeUpdate();
+		  	  	 stmt.execute("set FOREIGN_KEY_CHECKS = 1;");
+			   return "삭제성공";
+		   } catch(SQLException e) {
+			   e.printStackTrace();
+	  	   }
+	  	  return null;
 	   }
 	   
 	   public static void main (String args[]) {
